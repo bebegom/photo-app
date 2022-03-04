@@ -3,8 +3,6 @@ const { matchedData, validationResult } = require('express-validator');
 const models = require('../models');
 
 // get all photos of the user
-// const getphotos = 
-
 const getPhotos = async (req, res) => {
     await req.user.load('photos');
 
@@ -17,6 +15,24 @@ const getPhotos = async (req, res) => {
 
 };
 
+/** Get a photo of the user by id **/
+const getOnePhoto = async (req, res) => {
+    await req.user.load('photos');
+
+    const onePhoto = await new models.photos({ id: req.params.photoId });
+
+    // lazy-load photo-relation
+    const photoRelation = req.user.related('photos');
+    // find the photo with the id 
+    const foundPhoto = photoRelation.find(photo => photo.id == onePhoto.id);
+
+    res.send({
+        status: 'success',
+        data: {foundPhoto}
+    })
+}
+
+/** Create a new photo **/
 const addPhotos = async (req, res) => {
     // check for validation errors
     const errors = validationResult(req);
@@ -46,5 +62,6 @@ const addPhotos = async (req, res) => {
 
 module.exports = {
     getPhotos,
+    getOnePhoto,
     addPhotos
 };
