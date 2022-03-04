@@ -13,9 +13,17 @@ const createPhotoRules = [
         return Promise.resolve();
     }),
     body('album_id').optional(),
+    body('comment').optional(),
 ];
 
+/* Rules for updating an existing photo */
+const updatePhotoRules = [
+    body('title').optional(),
+    body('comment').optional(),
+    body('url').optional(),
+];
 
 module.exports = {
     createPhotoRules,
+    updatePhotoRules,
 }

@@ -44,7 +44,7 @@ const addPhotos = async (req, res) => {
 
     try {
         const photo = await new models.photos(validData).save();
-        debug('Created new book successfully: %O', photo);
+        debug('Created new photo successfully: %O', photo);
 
         res.send({
             status: 'success',
@@ -54,14 +54,57 @@ const addPhotos = async (req, res) => {
     } catch (error) {
         res.status(500).send({
             status: 'error',
-            message: 'Exception thrown in database when creating a new book.'
+            message: 'Exception thrown in database when creating a new photo.'
         });
         throw error;
     }
-}
+};
+
+/* Update an existing photo */
+const updatePhoto = async (req, res) => {
+    // make sure the photo exists
+    const photo = await new models.photos({ id: req.params.photoId }).fetch({ require: false });
+    if(!photo) {
+        return res.status(404).send({
+            status: 'fail',
+            data: 'Photo with that ID does not exist.'
+        });
+    }
+
+
+    const errors = validationResult(req);
+
+    if(!errors.isEmpty()) {
+        return res.status(422).send({ 
+            status: 'fail', 
+            data: errors.array() 
+        })
+    }
+
+    // only get validated data we want 
+    const validData = matchedData(req);
+
+    try {
+        const updatedPhoto = await photo.save(validData);
+        debug('Updated new photo successfully: %O', photo);
+
+        res.send({
+            status: 'success',
+            data: {updatedPhoto}
+        });
+
+    } catch (error) {
+        res.status(500).send({
+            status: 'error',
+            message: 'Exception thrown in database when updating the photo.'
+        });
+        throw error;
+    }
+};
 
 module.exports = {
     getPhotos,
     getOnePhoto,
-    addPhotos
+    addPhotos,
+    updatePhoto,
 };
