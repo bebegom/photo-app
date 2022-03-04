@@ -1,13 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const photoController = require('../controllers/photos-controller');
+const photoValidationRules = require('../validation/photo-validation');
 
 router.get('/', photoController.getPhotos);
 
 // router.get photo:id
 
 // post photo
-router.post('/', /* photoController.addPhotos */ );
+router.post('/', photoValidationRules.createPhotoRules, photoController.addPhotos);
 
 // put photo:id
 
