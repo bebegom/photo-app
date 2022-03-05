@@ -5,13 +5,15 @@ const registerController = require('../controllers/register-controller');
 const auth = require('../middlewares/auth');
 
 
-/* GET / */
+/* GET */
 router.get('/', (req, res, next) => {
 	res.send({ success: true, data: { msg: 'oh, hi' }});
 });
 
-// router.use('/example', require('./example'));
-router.use('/photos', auth.basic, require('./photos-routes'));
 router.use('/register', userValidation.registerRules, registerController.register);
+
+router.use('/albums', auth.basic, require('./albums-routes'));
+router.use('/photos', auth.basic, require('./photos-routes'));
+
 
 module.exports = router;

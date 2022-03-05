@@ -6,6 +6,9 @@
 		photos() {
             return this.hasMany('photo');
         },
+		albums() {
+			return this.hasMany('album');
+		}
 		
 	});
 };
