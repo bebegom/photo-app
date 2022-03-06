@@ -12,7 +12,6 @@ const createPhotoRules = [
 
         return Promise.resolve();
     }),
-    body('album_id').optional(),
     body('comment').optional(),
 ];
 

@@ -18,6 +18,7 @@ const models = {};
 models.users = require('./users')(bookshelf);
 models.photos = require('./photos')(bookshelf);
 models.albums = require('./albums')(bookshelf);
+models.albumsPhotos = require('./albums-photos')(bookshelf);
 
 module.exports = {
 	bookshelf,

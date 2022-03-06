@@ -86,7 +86,7 @@ const updatePhoto = async (req, res) => {
 
     try {
         const updatedPhoto = await photo.save(validData);
-        debug('Updated new photo successfully: %O', photo);
+        debug('Updated photo successfully: %O', photo);
 
         res.send({
             status: 'success',
