@@ -42,6 +42,13 @@ const addPhotos = async (req, res) => {
     // only get validated data we want 
     const validData = matchedData(req);
 
+    if(validData.user_id !== req.user.id) {
+        return res.status(401).send({
+            status: 'fail',
+            data: validData.user_id + ' is not your user-ID.'
+        })
+    }
+
     try {
         const photo = await new models.photos(validData).save();
         debug('Created new photo successfully: %O', photo);
@@ -62,12 +69,19 @@ const addPhotos = async (req, res) => {
 
 /* Update an existing photo */
 const updatePhoto = async (req, res) => {
-    // make sure the photo exists
-    const photo = await new models.photos({ id: req.params.photoId }).fetch({ require: false });
-    if(!photo) {
+    await req.user.load('photos');
+
+    const onePhoto = await new models.photos({ id: req.params.photoId });
+
+    // lazy-load album-relation
+    const photoRelation = req.user.related('photos');
+    // find the album with the id
+    const foundPhoto = photoRelation.find(album => album.id == onePhoto.id);
+
+    if(!foundPhoto) {
         return res.status(404).send({
             status: 'fail',
-            data: 'Photo with that ID does not exist.'
+            data: 'Photo with that ID could not be found in your list.'
         });
     }
 
@@ -85,8 +99,8 @@ const updatePhoto = async (req, res) => {
     const validData = matchedData(req);
 
     try {
-        const updatedPhoto = await photo.save(validData);
-        debug('Updated photo successfully: %O', photo);
+        const updatedPhoto = await foundPhoto.save(validData);
+        debug('Updated photo successfully: %O', updatePhoto);
 
         res.send({
             status: 'success',
