@@ -62,7 +62,6 @@ const addAlbum = async (req, res) => {
         })
     }
 
-
     try {
         const album = await new models.albums(validData).save();
         debug('Created new album successfully: %O', album);
@@ -135,7 +134,35 @@ const addPhotoToAlbum = async (req, res) => {
     }
     const validData = matchedData(req); 
 
-    if(!validData.album_id === req.params.albumId) {
+    // check if album belongs to user
+    await req.user.load('albums');
+    const oneAlbum = await new models.albums({ id: req.params.albumId });
+    // lazy-load album-relation
+    const albumRelation = req.user.related('albums');
+    // find the album with the id
+    const foundAlbum = albumRelation.find(album => album.id == oneAlbum.id);
+    if(!foundAlbum) {
+        return res.status(404).send({
+            status: 'fail',
+            data: 'An album with that id could not be found in your list'
+        });
+    }
+
+    // check if photo belongs to user
+    await req.user.load('photos');
+    const onePhoto = await new models.photos({ id: validData.photo_id });
+    // lazy-load photo-relation
+    const photoRelation = req.user.related('photos');
+    // find the photo with the id 
+    const foundPhoto = photoRelation.find(photo => photo.id == onePhoto.id);
+    if(!foundPhoto) {
+        return res.status(404).send({
+            status: 'fail',
+            data: 'An photo with that id could not be found in your list'
+        });
+    }
+
+    if(validData.album_id.toString() !== req.params.albumId.toString()) {
         return res.status(405).send({
             status: 'fail',
             data: 'The album IDs needs to match'
@@ -143,7 +170,6 @@ const addPhotoToAlbum = async (req, res) => {
     }
 
     try {
-
         await new models.albumsPhotos(validData).save();
 
         res.send({

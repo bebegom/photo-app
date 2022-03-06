@@ -24,8 +24,6 @@ const createAlbumRules = [
 ];
 
 /**
- * Update Example validation rules
- *
  * Required: -
  * Optional: title
  */

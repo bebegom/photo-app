@@ -26,10 +26,26 @@ const getOnePhoto = async (req, res) => {
     // find the photo with the id 
     const foundPhoto = photoRelation.find(photo => photo.id == onePhoto.id);
 
-    res.send({
-        status: 'success',
-        data: {foundPhoto}
-    })
+    if(!foundPhoto) {
+        return res.status(404).send({
+            status: 'fail',
+            data: 'An photo with that id could not be found in your list'
+        });
+    }
+
+    try {
+        res.send({
+            status: 'success',
+            data: {foundPhoto}
+        })
+    } catch (error) {
+        res.status(500).send({
+			status: 'error',
+			message: "Exception thrown when attempting to add photo",
+		});
+		throw error;
+    }
+    
 }
 
 /** Create a new photo **/
@@ -42,7 +58,7 @@ const addPhotos = async (req, res) => {
     // only get validated data we want 
     const validData = matchedData(req);
 
-    if(validData.user_id !== req.user.id) {
+    if(validData.user_id.toString() !== req.user.id.toString()) {
         return res.status(401).send({
             status: 'fail',
             data: validData.user_id + ' is not your user-ID.'
