@@ -26,10 +26,24 @@ const getOneAlbum = async (req, res) => {
     // find the album with the id
     const foundAlbum = albumRelation.find(album => album.id == oneAlbum.id);
 
-    res.send({
-        status: 'success',
-        data: {foundAlbum}
-    })
+    if(!foundAlbum) {
+        return res.status(404).send({
+            status: 'fail',
+            data: 'An album with that id could not be found in your list'
+        });
+    }
+
+    try {
+        res.send({
+            status: 'success',
+            data: {foundAlbum}
+        })
+    } catch(error) {
+        res.status(500).send({
+            status: 'fail',
+            message: error
+        });
+    }
 };
 
 const addAlbum = async (req, res) => {
