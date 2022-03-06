@@ -82,12 +82,19 @@ const addAlbum = async (req, res) => {
 };
 
 const updateAlbum = async (req, res) => {
-    // make sure album exists
-    const album = await new models.albums({ id: req.params.albumId }).fetch({ require: false });
-    if(!album) {
+    await req.user.load('albums');
+
+    const oneAlbum = await new models.albums({ id: req.params.albumId });
+
+    // lazy-load album-relation
+    const albumRelation = req.user.related('albums');
+    // find the album with the id
+    const foundAlbum = albumRelation.find(album => album.id == oneAlbum.id);
+
+    if(!foundAlbum) {
         return res.status(404).send({
             status: 'fail',
-            data: 'Album with that ID does not exist.'
+            data: 'An album with that id could not be found in your list'
         });
     }
 
@@ -104,8 +111,8 @@ const updateAlbum = async (req, res) => {
     const validData = matchedData(req);
 
     try {
-        const updatedAlbum = await album.save(validData);
-        debug('Updated album successfully: %O', album);
+        const updatedAlbum = await foundAlbum.save(validData);
+        debug('Updated album successfully: %O', updatedAlbum);
 
         res.send({
             status: 'success',
