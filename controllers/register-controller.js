@@ -10,7 +10,10 @@ const register = async (req, res) => {
     // check for errors in the data the user sent in
     const errors = validationResult(req);
     if(!errors.isEmpty()) {
-        return res.status(422).send({ status: 'fail', data: errors.array() })
+        return res.status(422).send({ 
+            status: 'fail', 
+            data: errors.array() 
+        });
     }
 
     // only get the validated data from the request
@@ -34,7 +37,14 @@ const register = async (req, res) => {
         const user = await new models.users(validData).save();
         debug('Created new user successfully: %O', user);
 
-        res.send({ status: 'success', data: {user} });
+        res.status(200).send({ 
+            status: 'success', 
+            data: {
+                email: validData.email,
+                first_name: validData.first_name,
+                last_name: validData.last_name,
+            } 
+        });
     } catch (error) {
         res.status(500).send({
             status: 'error',

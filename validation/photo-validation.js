@@ -2,24 +2,16 @@ const {body} = require('express-validator');
 const models = require('../models');
 
 const createPhotoRules = [
-    body('title').exists(),
-    body('url').exists(),
-    body('user_id').exists().custom(async value => {
-        const user = await new models.users({ id: value }).fetch({require: false});
-        if(!user) {
-            return Promise.reject(`User with ID ${value} does not exist.`)
-        }
-
-        return Promise.resolve();
-    }),
-    body('comment').optional(),
+    body('title').exists().isString().isLength({min:3}),
+    body('url').exists().isString().isURL(),
+    body('comment').optional().isString().isLength({min:3}),
 ];
 
 /* Rules for updating an existing photo */
 const updatePhotoRules = [
-    body('title').optional(),
-    body('comment').optional(),
-    body('url').optional(),
+    body('title').optional().isString().isLength({min:3}),
+    body('comment').optional().isString().isLength({min:3}),
+    body('url').optional().isString(),
 ];
 
 module.exports = {

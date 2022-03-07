@@ -1,18 +1,25 @@
 const debug = require('debug')('books:albums-controller');
-// const { response } = require('express');
-const { matchedData, validationResult, body } = require('express-validator');
+const { matchedData, validationResult } = require('express-validator');
 const models = require('../models');
 
 // get all albums of the user
 const getalbums = async (req, res) => {
     await req.user.load('albums');
 
-    res.status(200).send({
-        status: 'success',
-        data: {
-            user: req.user.related('albums'),
-        },
-    });
+    try {
+        res.status(200).send({
+            status: 'success',
+            data: {
+                user: req.user.related('albums'),
+            },
+        });
+    } catch (error) {
+        res.status(500).send({
+            status: 'error',
+            message: 'Exception thrown in database when loading albums.'
+        });
+        throw error;
+    }
 
 };
 
@@ -33,40 +40,43 @@ const getOneAlbum = async (req, res) => {
         });
     }
 
+    // get the related photos
+    const album = await new models.albums({ id: req.params.albumId }).fetch({ withRelated: ['photos'] });
+    
+
     try {
-        res.send({
+        res.status(200).send({
             status: 'success',
-            data: {foundAlbum}
+            data: {album}
         })
+        // debug();
     } catch(error) {
         res.status(500).send({
-            status: 'fail',
+            status: 'error',
             message: error
         });
+        throw error;
     }
 };
 
 const addAlbum = async (req, res) => {
     const errors = validationResult(req);
     if(!errors.isEmpty()) {
-        return res.status(422).send({ status: 'fail', data: errors.array() })
+        return res.status(422).send({ 
+            status: 'fail', 
+            data: errors.array() 
+        })
     }
 
     // only get validated data we want 
     const validData = matchedData(req);
-
-    if(validData.user_id !== req.user.id) {
-        return res.status(401).send({
-            status: 'fail',
-            data: validData.user_id + ' is not your user-ID.'
-        })
-    }
+    validData.user_id = req.user.id;
 
     try {
         const album = await new models.albums(validData).save();
         debug('Created new album successfully: %O', album);
 
-        res.send({
+        res.status(200).send({
             status: 'success',
             data: {album}
         });
@@ -113,7 +123,7 @@ const updateAlbum = async (req, res) => {
         const updatedAlbum = await foundAlbum.save(validData);
         debug('Updated album successfully: %O', updatedAlbum);
 
-        res.send({
+        res.status(200).send({
             status: 'success',
             data: {updatedAlbum}
         });
@@ -130,9 +140,13 @@ const addPhotoToAlbum = async (req, res) => {
     // Checking after errors before adding photo
     const errors = validationResult(req);
     if(!errors.isEmpty()){
-        return res.status(422).send({ status : "fail", data: errors.array() });
+        return res.status(422).send({ 
+            status : "fail", 
+            data: errors.array() 
+        });
     }
     const validData = matchedData(req); 
+    validData.album_id = req.params.albumId;
 
     // check if album belongs to user
     await req.user.load('albums');
@@ -162,26 +176,30 @@ const addPhotoToAlbum = async (req, res) => {
         });
     }
 
-    if(validData.album_id.toString() !== req.params.albumId.toString()) {
-        return res.status(405).send({
+    const album = await new models.albums({ id: req.params.albumId }).fetch({ withRelated: ['photos'] });
+
+    const photos = album.related('photos');
+    const existingPhoto = photos.find(photo => photo.id == validData.photo_id);
+
+    if(existingPhoto) {
+        return res.status(422).send({
             status: 'fail',
-            data: 'The album IDs needs to match'
-        });
+            data: 'Photo already exist'
+        })
     }
 
     try {
         await new models.albumsPhotos(validData).save();
 
-        res.send({
+        res.status(200).send({
             status: 'success',
-            data:   
-                null,
+            data: null
         });
 
     } catch (error) {
         res.status(500).send({
 			status: 'error',
-			message: "Exception thrown when attempting to add photo",
+			message: "Exception thrown when attempting to add photo in album",
 		});
 		throw error;
     }

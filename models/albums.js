@@ -7,7 +7,7 @@ module.exports = (bookshelf) => {
 			return this.belongsTo('user');
 		},
 		photos() {
-			return this.hasMany('photo');
+			return this.belongsToMany('photo');
 		}
 	});
 };

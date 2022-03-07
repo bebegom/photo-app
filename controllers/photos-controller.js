@@ -6,12 +6,20 @@ const models = require('../models');
 const getPhotos = async (req, res) => {
     await req.user.load('photos');
 
-    res.status(200).send({
-        status: 'success',
-        data: {
-            user: req.user.related('photos'),
-        }
-    });
+    try {
+        res.status(200).send({
+            status: 'success',
+            data: {
+                user: req.user.related('photos'),
+            }
+        });
+    } catch (error) {
+        res.status(500).send({
+            status: 'error',
+            message: 'Exception thrown in database when loading photos.'
+        });
+        throw error;
+    }
 
 };
 
@@ -34,14 +42,14 @@ const getOnePhoto = async (req, res) => {
     }
 
     try {
-        res.send({
+        res.status(200).send({
             status: 'success',
             data: {foundPhoto}
         })
     } catch (error) {
         res.status(500).send({
 			status: 'error',
-			message: "Exception thrown when attempting to add photo",
+			message: "Exception thrown when attempting to get photo",
 		});
 		throw error;
     }
@@ -53,23 +61,20 @@ const addPhotos = async (req, res) => {
     // check for validation errors
     const errors = validationResult(req);
     if(!errors.isEmpty()) {
-        return res.status(422).send({ status: 'fail', data: errors.array() })
+        return res.status(422).send({ 
+            status: 'fail', 
+            data: errors.array() 
+        })
     }
     // only get validated data we want 
     const validData = matchedData(req);
-
-    if(validData.user_id.toString() !== req.user.id.toString()) {
-        return res.status(401).send({
-            status: 'fail',
-            data: validData.user_id + ' is not your user-ID.'
-        })
-    }
+    validData.user_id = req.user.id;
 
     try {
         const photo = await new models.photos(validData).save();
         debug('Created new photo successfully: %O', photo);
 
-        res.send({
+        res.status(200).send({
             status: 'success',
             data: {photo}
         });
@@ -118,7 +123,7 @@ const updatePhoto = async (req, res) => {
         const updatedPhoto = await foundPhoto.save(validData);
         debug('Updated photo successfully: %O', updatePhoto);
 
-        res.send({
+        res.status(200).send({
             status: 'success',
             data: {updatedPhoto}
         });

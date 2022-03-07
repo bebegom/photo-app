@@ -12,15 +12,7 @@ const models = require('../models');
  * Optional: -
  */
 const createAlbumRules = [
-	body('title').exists().isLength({ min: 4 }),
-	body('user_id').exists().custom(async value => {
-        const user = await new models.users({ id: value }).fetch({require: false});
-        if(!user) {
-            return Promise.reject(`User with ID ${value} does not exist.`)
-        }
-
-        return Promise.resolve();
-    }),
+	body('title').exists().isString().isLength({ min: 3 }),
 ];
 
 /**
@@ -28,25 +20,17 @@ const createAlbumRules = [
  * Optional: title
  */
 const updateAlbumRules = [
-	body('title').exists(),
+	body('title').exists().isString().isLength({min:3}),
 ];
 
 const addPhotoToAlbumRules = [
-	body('photo_id').exists().custom(async value => {
+	body('photo_id').exists().isInt().custom(async value => {
         const photo = await new models.photos({ id : value }).fetch({ require: false });
         if(!photo) {
             return Promise.reject(`Photo with ID ${value} does not exist.`);
         }
         return Promise.resolve();
     }),
-    body('album_id').exists().custom(async value => {
-        const album = await new models.albums({ id : value }).fetch({ require: false });
-        if(!album) {
-            return Promise.reject(`Album with ID ${value} does not exist.`);
-        }
-        return Promise.resolve();
-    }),
-    
 ];
 
 module.exports = {
