@@ -5,7 +5,6 @@ const { matchedData, validationResult } = require('express-validator');
 const models = require('../models');
 const bcrypt = require('bcrypt');
 
-
 const register = async (req, res) => {
     // check for errors in the data the user sent in
     const errors = validationResult(req);

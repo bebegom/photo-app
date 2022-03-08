@@ -10,6 +10,7 @@ router.get('/', (req, res, next) => {
 	res.send({ success: true, data: { msg: 'oh, hi' }});
 });
 
+/* USE */
 router.use('/register', userValidation.registerRules, registerController.register);
 
 router.use('/albums', auth.basic, require('./albums-routes'));

@@ -1,5 +1,4 @@
 const {body} = require('express-validator');
-const models = require('../models');
 
 const createPhotoRules = [
     body('title').exists().isString().isLength({min:3}),
@@ -11,7 +10,7 @@ const createPhotoRules = [
 const updatePhotoRules = [
     body('title').optional().isString().isLength({min:3}),
     body('comment').optional().isString().isLength({min:3}),
-    body('url').optional().isString(),
+    body('url').optional().isString().isURL(),
 ];
 
 module.exports = {

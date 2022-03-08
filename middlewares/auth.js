@@ -1,11 +1,8 @@
 const debug = require('debug')('books:auth');
-// const models = require('../models');
-// const { user } = require('../models');
 const models = require('../models');
 const bcrypt = require('bcrypt');
 
 const basic = async (req,res, next) => {
-    debug('Hello from auth basic!');
 
     // authorization header must exist, otherwise fail!
     if(!req.headers.authorization) {
@@ -41,17 +38,17 @@ const basic = async (req,res, next) => {
     if(!user) {
         return res.status(401).send({
             status: 'fail',
-            data: 'Authorization failed, email does not exist'
+            data: 'Authorization failed'
         });
     }; 
 
-    // compare if incoming password the hashed one
+    // compare the incoming password with the hashed one
     const comparedPasswords = await bcrypt.compare(password, user.get('password'));
 
     if(!comparedPasswords) {
         res.status(401).send({
             status: 'fail',
-            data: 'Authorization failed, password not correct'
+            data: 'Authorization failed'
         })
     };
 

@@ -2,16 +2,15 @@ const debug = require('debug')('books:albums-controller');
 const { matchedData, validationResult } = require('express-validator');
 const models = require('../models');
 
-// get all albums of the user
+// Get all albums of the user
 const getalbums = async (req, res) => {
     await req.user.load('albums');
 
     try {
         res.status(200).send({
             status: 'success',
-            data: {
-                user: req.user.related('albums'),
-            },
+            data: req.user.related('albums'),
+            
         });
     } catch (error) {
         res.status(500).send({
@@ -23,12 +22,13 @@ const getalbums = async (req, res) => {
 
 };
 
+// Get a specific album of the user
 const getOneAlbum = async (req, res) => {
     await req.user.load('albums');
 
     const oneAlbum = await new models.albums({ id: req.params.albumId });
 
-    // lazy-load album-relation
+    // lazy-load
     const albumRelation = req.user.related('albums');
     // find the album with the id
     const foundAlbum = albumRelation.find(album => album.id == oneAlbum.id);
@@ -40,16 +40,14 @@ const getOneAlbum = async (req, res) => {
         });
     }
 
-    // get the related photos
+    // Get the photos
     const album = await new models.albums({ id: req.params.albumId }).fetch({ withRelated: ['photos'] });
-    
 
     try {
         res.status(200).send({
             status: 'success',
             data: {album}
-        })
-        // debug();
+        });
     } catch(error) {
         res.status(500).send({
             status: 'error',
@@ -59,6 +57,7 @@ const getOneAlbum = async (req, res) => {
     }
 };
 
+// Create a new album
 const addAlbum = async (req, res) => {
     const errors = validationResult(req);
     if(!errors.isEmpty()) {
@@ -90,12 +89,14 @@ const addAlbum = async (req, res) => {
     }
 };
 
+// Update an album
 const updateAlbum = async (req, res) => {
+    // Make sure the user has the album
     await req.user.load('albums');
 
     const oneAlbum = await new models.albums({ id: req.params.albumId });
 
-    // lazy-load album-relation
+    // lazy-load
     const albumRelation = req.user.related('albums');
     // find the album with the id
     const foundAlbum = albumRelation.find(album => album.id == oneAlbum.id);
@@ -107,6 +108,7 @@ const updateAlbum = async (req, res) => {
         });
     }
 
+    // Check for errors 
     const errors = validationResult(req);
 
     if(!errors.isEmpty()) {
@@ -136,8 +138,9 @@ const updateAlbum = async (req, res) => {
     }
 };
 
+// Add photo to an album
 const addPhotoToAlbum = async (req, res) => {
-    // Checking after errors before adding photo
+    // Check for errors 
     const errors = validationResult(req);
     if(!errors.isEmpty()){
         return res.status(422).send({ 
@@ -151,7 +154,7 @@ const addPhotoToAlbum = async (req, res) => {
     // check if album belongs to user
     await req.user.load('albums');
     const oneAlbum = await new models.albums({ id: req.params.albumId });
-    // lazy-load album-relation
+    // lazy-load
     const albumRelation = req.user.related('albums');
     // find the album with the id
     const foundAlbum = albumRelation.find(album => album.id == oneAlbum.id);
@@ -165,7 +168,7 @@ const addPhotoToAlbum = async (req, res) => {
     // check if photo belongs to user
     await req.user.load('photos');
     const onePhoto = await new models.photos({ id: validData.photo_id });
-    // lazy-load photo-relation
+    // lazy-load
     const photoRelation = req.user.related('photos');
     // find the photo with the id 
     const foundPhoto = photoRelation.find(photo => photo.id == onePhoto.id);
@@ -181,6 +184,7 @@ const addPhotoToAlbum = async (req, res) => {
     const photos = album.related('photos');
     const existingPhoto = photos.find(photo => photo.id == validData.photo_id);
 
+    // Check if photo already exists in the album
     if(existingPhoto) {
         return res.status(422).send({
             status: 'fail',

@@ -2,15 +2,15 @@ const debug = require('debug')('books:photos-controller');
 const { matchedData, validationResult } = require('express-validator');
 const models = require('../models');
 
-// get all photos of the user
+// Get all photos of the user
 const getPhotos = async (req, res) => {
-    await req.user.load('photos');
+    const allPhotos = await new models.photos().where({ 'user_id': req.user.id }).fetchAll({ columns: ['id', 'title', 'url', 'comment'] });
 
     try {
         res.status(200).send({
             status: 'success',
             data: {
-                user: req.user.related('photos'),
+                user: allPhotos
             }
         });
     } catch (error) {
@@ -23,13 +23,13 @@ const getPhotos = async (req, res) => {
 
 };
 
-/** Get a photo of the user by id **/
+// Get a specific photo of the user
 const getOnePhoto = async (req, res) => {
     await req.user.load('photos');
 
     const onePhoto = await new models.photos({ id: req.params.photoId });
 
-    // lazy-load photo-relation
+    // lazy-load
     const photoRelation = req.user.related('photos');
     // find the photo with the id 
     const foundPhoto = photoRelation.find(photo => photo.id == onePhoto.id);
@@ -41,10 +41,12 @@ const getOnePhoto = async (req, res) => {
         });
     }
 
+    const resPhoto = await new models.photos().where({ id: req.params.photoId }).fetchAll({ columns: ['id', 'title', 'url', 'comment'] });
+
     try {
         res.status(200).send({
             status: 'success',
-            data: {foundPhoto}
+            data: {resPhoto}
         })
     } catch (error) {
         res.status(500).send({
@@ -56,7 +58,7 @@ const getOnePhoto = async (req, res) => {
     
 }
 
-/** Create a new photo **/
+// Create a new photo
 const addPhotos = async (req, res) => {
     // check for validation errors
     const errors = validationResult(req);
@@ -88,16 +90,16 @@ const addPhotos = async (req, res) => {
     }
 };
 
-/* Update an existing photo */
+// Update an existing photo
 const updatePhoto = async (req, res) => {
     await req.user.load('photos');
 
     const onePhoto = await new models.photos({ id: req.params.photoId });
 
-    // lazy-load album-relation
+    // lazy-load
     const photoRelation = req.user.related('photos');
-    // find the album with the id
-    const foundPhoto = photoRelation.find(album => album.id == onePhoto.id);
+    // find the photo with the id
+    const foundPhoto = photoRelation.find(photo => photo.id == onePhoto.id);
 
     if(!foundPhoto) {
         return res.status(404).send({
@@ -106,7 +108,7 @@ const updatePhoto = async (req, res) => {
         });
     }
 
-
+    // Check for errors
     const errors = validationResult(req);
 
     if(!errors.isEmpty()) {
